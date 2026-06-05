@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factori Zilnici</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            font-family:'DM Sans', sans-serif;
+            background:#bfe8fb;
+            min-height:100vh;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            padding:clamp(16px,3vw,32px);
+            position:relative;
+            overflow-x:hidden;
+        }
+
+        .blob { position:fixed; border-radius:50%; background:rgba(255,255,255,0.18); pointer-events:none; z-index:0; }
+        .b1 { width:320px; height:320px; top:-120px; left:-100px; }
+        .b2 { width:220px; height:220px; bottom:-80px; right:-80px; }
+
+        .card {
+            background:white;
+            border-radius:clamp(16px,2vw,28px);
+            padding:clamp(24px,4vw,48px);
+            width:min(680px,95vw);
+            box-shadow:0 12px 40px rgba(80,150,200,0.15);
+            position:relative;
+            z-index:1;
+            animation:fadeUp 0.5s ease both;
+        }
+
+        @keyframes fadeUp {
+            from { opacity:0; transform:translateY(16px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+
+        .page-badge {
+            display:inline-block;
+            background:#bfe8fb;
+            color:#1e2d3d;
+            font-size:12px;
+            font-weight:600;
+            padding:4px 12px;
+            border-radius:50px;
+            margin-bottom:10px;
+        }
+
+        h2 {
+            font-family:'DM Serif Display', serif;
+            font-size:clamp(20px,3vw,28px);
+            color:#1e2d3d;
+            margin-bottom:6px;
+        }
+
+        .subtitle {
+            font-size:13px;
+            color:#96b0c4;
+            margin-bottom:clamp(24px,3vw,36px);
+        }
+
+        /* ── FACTOR BLOCK ── */
+        .factor-block {
+            margin-bottom:28px;
+            padding-bottom:24px;
+            border-bottom:0.5px solid #dde8f0;
+        }
+        .factor-block:last-of-type { border-bottom:none; }
+
+        .factor-label {
+            font-size:15px;
+            font-weight:500;
+            color:#1e2d3d;
+            margin-bottom:6px;
+            display:flex;
+            align-items:center;
+            gap:8px;
+        }
+
+        .factor-desc {
+            font-size:12px;
+            color:#96b0c4;
+            margin-bottom:14px;
+        }
+
+        /* ── SOMN ── */
+        .sleep-inputs {
+            display:flex;
+            align-items:center;
+            gap:12px;
+            flex-wrap:wrap;
+        }
+
+        .sleep-field {
+            display:flex;
+            align-items:center;
+            gap:8px;
+        }
+
+        .sleep-field label {
+            font-size:13px;
+            color:#96b0c4;
+        }
+
+        .sleep-field input {
+            width:70px;
+            padding:10px 12px;
+            border:1.5px solid #dde8f0;
+            border-radius:10px;
+            font-family:'DM Sans', sans-serif;
+            font-size:15px;
+            color:#1e2d3d;
+            text-align:center;
+            outline:none;
+            transition:border-color 0.2s;
+        }
+        .sleep-field input:focus { border-color:#a78bda; }
+
+        /* ── STELE ── */
+        .stars {
+            display:flex;
+            gap:8px;
+            align-items:center;
+        }
+
+        .star {
+            font-size:28px;
+            cursor:pointer;
+            color:#dde8f0;
+            transition:color 0.15s, transform 0.1s;
+            user-select:none;
+        }
+        .star:hover { transform:scale(1.15); }
+        .star.active { color:#f6c90e; }
+
+        .star-label {
+            font-size:12px;
+            color:#96b0c4;
+            margin-left:8px;
+            min-width:80px;
+        }
+
+        /* ── STRES INVERS ── */
+        .stress-note {
+            font-size:11px;
+            color:#96b0c4;
+            margin-top:6px;
+            font-style:italic;
+        }
+
+        /* ── ACTIONS ── */
+        .actions {
+            display:flex;
+            gap:12px;
+            margin-top:32px;
+            justify-content:flex-end;
+            border-top:0.5px solid #dde8f0;
+            padding-top:24px;
+            flex-wrap:wrap;
+        }
+
+        .btn-secondary {
+            padding:11px 22px; border-radius:50px;
+            border:1.5px solid #dde8f0; background:transparent;
+            font-family:'DM Sans', sans-serif; font-size:14px; color:#96b0c4;
+            cursor:pointer; transition:all 0.2s;
+        }
+        .btn-secondary:hover { border-color:#96b0c4; color:#1e2d3d; }
+
+        .btn-primary {
+            padding:11px 28px; border-radius:50px; border:none;
+            background:#7c5cbf; font-family:'DM Sans', sans-serif;
+            font-size:14px; font-weight:600; color:white;
+            cursor:pointer; transition:all 0.2s;
+        }
+        .btn-primary:hover { background:#6a4aad; transform:translateY(-1px); }
+    </style>
+</head>
+<body>
+
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+
+<div class="card">
+    <div th:if="${eroare}"
+         style="background:#fff0f0; border:1px solid #ffcccc; border-radius:10px;
+            padding:12px 16px; margin-bottom:16px; font-size:13px; color:#e84040;">
+        <span th:text="${eroare}"></span>
+    </div>
+    <span class="page-badge">Act 2 — Factori zilnici</span>
+    <h2>Cum a fost ziua ta? 🌙</h2>
+    <p class="subtitle">Completează factorii zilnici o singură dată pe zi.</p>
+
+    <form th:action="@{/factori/adauga}" method="post" id="form-factori">
+
+        <!-- SOMN -->
+        <div class="factor-block">
+            <div class="factor-label">😴 Somn</div>
+            <p class="factor-desc">Câte ore ai dormit în noaptea trecută?</p>
+            <div class="sleep-inputs">
+                <div class="sleep-field">
+                    <input type="number" id="ore-somn" name="oreSomn"
+                           min="0" max="23" placeholder="7" required/>
+                    <label>ore</label>
+                </div>
+                <div class="sleep-field">
+                    <input type="number" id="minute-somn" name="minuteSomn"
+                           min="0" max="59" placeholder="30" required/>
+                    <label>minute</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- STRES -->
+        <div class="factor-block">
+            <div class="factor-label">😤 Nivel de stres</div>
+            <p class="factor-desc">Cât de stresat(ă) te-ai simțit astăzi?</p>
+            <div class="stars" id="stars-stres">
+                <span class="star" data-val="1">★</span>
+                <span class="star" data-val="2">★</span>
+                <span class="star" data-val="3">★</span>
+                <span class="star" data-val="4">★</span>
+                <span class="star" data-val="5">★</span>
+                <span class="star-label" id="label-stres"></span>
+            </div>
+            <p class="stress-note">1 stea = deloc stresat(ă), 5 stele = foarte stresat(ă)</p>
+            <input type="hidden" id="val-stres" name="stres" value="0"/>
+        </div>
+
+        <!-- ACTIVITATE FIZICA -->
+        <div class="factor-block">
+            <div class="factor-label">🏃 Activitate fizică</div>
+            <p class="factor-desc">Cât de activ(ă) fizic ai fost astăzi?</p>
+            <div class="stars" id="stars-fizica">
+                <span class="star" data-val="1">★</span>
+                <span class="star" data-val="2">★</span>
+                <span class="star" data-val="3">★</span>
+                <span class="star" data-val="4">★</span>
+                <span class="star" data-val="5">★</span>
+                <span class="star-label" id="label-fizica"></span>
+            </div>
+            <input type="hidden" id="val-fizica" name="activitateFizica" value="0"/>
+        </div>
+
+        <!-- ACTIVITATE SOCIALA -->
+        <div class="factor-block">
+            <div class="factor-label">👥 Activitate socială</div>
+            <p class="factor-desc">Cât de mult ai interacționat social astăzi?</p>
+            <div class="stars" id="stars-sociala">
+                <span class="star" data-val="1">★</span>
+                <span class="star" data-val="2">★</span>
+                <span class="star" data-val="3">★</span>
+                <span class="star" data-val="4">★</span>
+                <span class="star" data-val="5">★</span>
+                <span class="star-label" id="label-sociala"></span>
+            </div>
+            <input type="hidden" id="val-sociala" name="activitateSociala" value="0"/>
+        </div>
+
+        <!-- MANCARE -->
+        <div class="factor-block">
+            <div class="factor-label">🥗 Mâncare</div>
+            <p class="factor-desc">Cât de sănătos ai mâncat astăzi?</p>
+            <div class="stars" id="stars-mancare">
+                <span class="star" data-val="1">★</span>
+                <span class="star" data-val="2">★</span>
+                <span class="star" data-val="3">★</span>
+                <span class="star" data-val="4">★</span>
+                <span class="star" data-val="5">★</span>
+                <span class="star-label" id="label-mancare"></span>
+            </div>
+            <input type="hidden" id="val-mancare" name="mancare" value="0"/>
+        </div>
+
+        <div class="actions">
+            <button type="button" class="btn-secondary" onclick="history.back()">Înapoi</button>
+            <button type="submit" class="btn-primary">Salvează ✓</button>
+        </div>
+
+    </form>
+</div>
+
+<script>
+    const starLabels = {
+        stres:   ['', 'Deloc', 'Puțin', 'Moderat', 'Mult', 'Foarte mult'],
+        fizica:  ['', 'Deloc', 'Puțin', 'Moderat', 'Activ', 'Foarte activ'],
+        sociala: ['', 'Izolat', 'Puțin', 'Moderat', 'Social', 'Foarte social'],
+        mancare: ['', 'Nesănătos', 'Puțin sănătos', 'Ok', 'Sănătos', 'Foarte sănătos'],
+    };
+
+    function initStars(groupId, hiddenId, labelId, type) {
+        const group = document.getElementById(groupId);
+        const hidden = document.getElementById(hiddenId);
+        const label = document.getElementById(labelId);
+        const stars = group.querySelectorAll('.star');
+        let selected = 0;
+
+        stars.forEach(star => {
+            star.addEventListener('mouseenter', () => {
+                const val = parseInt(star.dataset.val);
+                stars.forEach(s => s.classList.toggle('active', parseInt(s.dataset.val) <= val));
+                label.textContent = starLabels[type][val];
+            });
+
+            star.addEventListener('mouseleave', () => {
+                stars.forEach(s => s.classList.toggle('active', parseInt(s.dataset.val) <= selected));
+                label.textContent = selected ? starLabels[type][selected] : '';
+            });
+
+            star.addEventListener('click', () => {
+                selected = parseInt(star.dataset.val);
+                hidden.value = selected;
+                stars.forEach(s => s.classList.toggle('active', parseInt(s.dataset.val) <= selected));
+                label.textContent = starLabels[type][selected];
+            });
+        });
+    }
+
+    initStars('stars-stres',   'val-stres',   'label-stres',   'stres');
+    initStars('stars-fizica',  'val-fizica',  'label-fizica',  'fizica');
+    initStars('stars-sociala', 'val-sociala', 'label-sociala', 'sociala');
+    initStars('stars-mancare', 'val-mancare', 'label-mancare', 'mancare');
+
+    // Validare ore/minute
+    document.getElementById('ore-somn').addEventListener('change', function() {
+        if (this.value > 12) this.value = 12;
+        if (this.value < 0) this.value = 0;
+    });
+    document.getElementById('minute-somn').addEventListener('change', function() {
+        if (this.value > 59) this.value = 59;
+        if (this.value < 0) this.value = 0;
+    });
+</script>
+
+</body>
+</html>

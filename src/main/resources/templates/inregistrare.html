@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ro" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up – Stare Emoțională</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            font-family:'DM Sans', sans-serif;
+            background:#bfe8fb;
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:24px;
+            overflow:hidden;
+            position:relative;
+        }
+
+        .blob { position:absolute; border-radius:50%; background:rgba(255,255,255,0.18); }
+        .b1 { width:320px; height:320px; top:-120px; left:-100px; }
+        .b2 { width:220px; height:220px; bottom:-80px; right:-80px; }
+        .b3 { width:120px; height:120px; top:60px; right:180px; }
+
+        .card {
+            display:flex;
+            width:min(1050px, 96vw);
+            min-height:660px;
+            background:white;
+            border-radius:40px;
+            overflow:hidden;
+            box-shadow:0 24px 80px rgba(80,150,200,0.22);
+            z-index:1;
+            animation:fadeUp 0.6s ease both;
+        }
+
+        @keyframes fadeUp {
+            from { opacity:0; transform:translateY(24px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+
+        .side-image {
+            width:45%;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            padding:56px 40px;
+            background:linear-gradient(135deg, #a8d8f0 0%, #cceeff 100%);
+        }
+
+        .side-image img {
+            width:min(320px, 90%);
+            height:auto;
+            object-fit:contain;
+        }
+
+        .side-tagline {
+            margin-top:32px;
+            text-align:center;
+        }
+        .side-tagline h3 {
+            font-family:'DM Serif Display', serif;
+            font-size:clamp(22px, 2.5vw, 30px);
+            color:white;
+            text-shadow:0 1px 8px rgba(60,120,160,0.2);
+        }
+        .side-tagline p {
+            font-size:clamp(13px, 1.3vw, 15px);
+            color:rgba(255,255,255,0.8);
+            margin-top:8px;
+            line-height:1.6;
+        }
+
+        .side-form {
+            flex:1;
+            padding:clamp(32px, 4vw, 60px) clamp(28px, 4vw, 60px);
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+        }
+
+        .side-form h2 {
+            font-family:'DM Serif Display', serif;
+            font-size:clamp(30px, 4vw, 42px);
+            color:#1e2d3d;
+            margin-bottom:8px;
+        }
+        .side-form .subtitle {
+            font-size:clamp(14px, 1.4vw, 16px);
+            color:#96b0c4;
+            margin-bottom:28px;
+        }
+
+        .row { display:flex; gap:24px; }
+
+        .field { margin-bottom:22px; flex:1; }
+        .field label {
+            display:block;
+            font-size:12px;
+            color:#96b0c4;
+            letter-spacing:0.5px;
+            margin-bottom:8px;
+            text-transform:uppercase;
+        }
+        .field input {
+            width:100%;
+            border:none;
+            border-bottom:1.5px solid #dde8f0;
+            padding:10px 0;
+            font-family:'DM Sans', sans-serif;
+            font-size:clamp(15px, 1.6vw, 17px);
+            color:#1e2d3d;
+            background:transparent;
+            outline:none;
+            transition:border-color 0.2s;
+        }
+        .field input::placeholder { color:#c5d8e6; }
+        .field input:focus { border-bottom-color:#6aabcf; }
+
+        .btn-submit {
+            width:100%;
+            padding:18px;
+            border:none;
+            border-radius:50px;
+            background:#bfe8fb;
+            font-family:'DM Sans', sans-serif;
+            font-size:clamp(15px, 1.6vw, 17px);
+            font-weight:600;
+            color:#1e2d3d;
+            cursor:pointer;
+            transition:all 0.2s;
+            margin-top:8px;
+        }
+        .btn-submit:hover { background:#a5d8f0; transform:translateY(-2px); box-shadow:0 6px 20px rgba(100,170,210,0.3); }
+
+        .switch-link {
+            text-align:center;
+            margin-top:20px;
+            font-size:clamp(13px, 1.3vw, 15px);
+            color:#96b0c4;
+        }
+        .switch-link a { color:#1e2d3d; font-weight:600; text-decoration:none; }
+        .switch-link a:hover { text-decoration:underline; }
+
+        @media (max-width: 680px) {
+            .card { flex-direction:column; }
+            .side-image { width:100%; padding:28px 24px; }
+            .row { flex-direction:column; gap:0; }
+        }
+    </style>
+</head>
+<body>
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+<div class="blob b3"></div>
+
+<div class="card">
+    <div class="side-image">
+        <img src="/images/Login.jpg" alt="ilustratie"/>
+        <div class="side-tagline">
+            <h3>Stare Emoțională</h3>
+            <p>Cunoaște-te mai bine, zi de zi</p>
+        </div>
+    </div>
+
+    <div class="side-form">
+        <h2>Sign up</h2>
+        <p class="subtitle">Creează un cont, e gratuit 💙</p>
+
+        <form th:action="@{/inregistrare}" th:object="${utilizator}" method="post">
+            <div class="row">
+                <div class="field">
+                    <label>Nume</label>
+                    <input type="text" th:field="*{nume}" placeholder="Popescu"/>
+                </div>
+                <div class="field">
+                    <label>Prenume</label>
+                    <input type="text" name="prenume" placeholder="Ana" required/>
+                </div>
+            </div>
+            <div class="field">
+                <label>Email</label>
+                <input type="email" name="email" placeholder="adresa@email.com" required/>
+            </div>
+            <div class="field">
+                <label>Parolă</label>
+                <input type="password" name="parola" placeholder="••••••••" required/>
+            </div>
+            <div class="field">
+                <label>Nr. Telefon (opțional)</label>
+                <input type="text" name="nrTelefon" placeholder="07xx xxx xxx"/>
+            </div>
+            <button type="submit" class="btn-submit">Sign Up</button>
+        </form>
+
+        <p class="switch-link">Ai deja un cont? <a href="/login">Log In</a></p>
+    </div>
+</div>
+</body>
+</html>

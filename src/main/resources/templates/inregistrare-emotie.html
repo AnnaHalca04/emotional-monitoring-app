@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Înregistrare Emoție</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            font-family:'DM Sans', sans-serif;
+            background:#bfe8fb;
+            min-height:100vh;
+            padding:clamp(16px,3vw,32px);
+            position:relative;
+            overflow-x:hidden;
+        }
+
+        .blob { position:fixed; border-radius:50%; background:rgba(255,255,255,0.18); pointer-events:none; z-index:0; }
+        .b1 { width:320px; height:320px; top:-120px; left:-100px; }
+        .b2 { width:220px; height:220px; bottom:-80px; right:-80px; }
+
+        .page-title {
+            font-family:'DM Serif Display', serif;
+            font-size:clamp(20px,3vw,28px);
+            color:#1e2d3d;
+            text-align:center;
+            margin-bottom:clamp(16px,2vw,24px);
+            position:relative;
+            z-index:1;
+        }
+
+        .step-card {
+            background:white;
+            border-radius:clamp(16px,2vw,28px);
+            padding:clamp(20px,3vw,40px);
+            width:min(960px,95vw);
+            margin:0 auto clamp(16px,2vw,24px);
+            box-shadow:0 12px 40px rgba(80,150,200,0.15);
+            position:relative;
+            z-index:1;
+            display:none;
+        }
+
+        .step-card.visible {
+            display:block;
+            animation:fadeUp 0.5s ease both;
+        }
+
+        @keyframes fadeUp {
+            from { opacity:0; transform:translateY(16px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+
+        .step-header {
+            display:flex;
+            align-items:center;
+            gap:10px;
+            margin-bottom:8px;
+        }
+
+        .step-num {
+            width:28px; height:28px;
+            border-radius:50%;
+            background:#bfe8fb;
+            color:#1e2d3d;
+            font-size:13px;
+            font-weight:600;
+            display:flex; align-items:center; justify-content:center;
+            flex-shrink:0;
+        }
+
+        .step-title {
+            font-family:'DM Serif Display', serif;
+            font-size:clamp(18px,2.5vw,24px);
+            color:#1e2d3d;
+        }
+
+        .step-subtitle {
+            font-size:13px;
+            color:#96b0c4;
+            margin-bottom:clamp(16px,2vw,28px);
+            margin-left:38px;
+        }
+
+        /* ── PAS 1 — ROATA ── */
+        .wheel-section {
+            display:flex;
+            gap:clamp(16px,3vw,40px);
+            align-items:flex-start;
+            flex-wrap:wrap;
+        }
+
+        .wheel-wrap {
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            gap:8px;
+        }
+
+        .arrow-wrap {
+    position:relative;
+    width:480px;
+    height:480px;
+}
+
+        .arrow-indicator {
+            position:absolute;
+            top:-18px; left:50%;
+            transform:translateX(-50%);
+            width:0; height:0;
+            border-left:12px solid transparent;
+            border-right:12px solid transparent;
+            border-top:22px solid #555;
+            z-index:10;
+        }
+        .selected-emotions {
+            flex:1; min-width:180px;
+        }
+
+        .selected-emotions h3 {
+            font-size:14px; font-weight:500; color:#1e2d3d; margin-bottom:10px;
+        }
+
+        #emotion-list { display:flex; flex-direction:column; gap:8px; }
+
+        /* ── PAS 2 — INTENSITATE per emotie ── */
+        .emotion-block {
+            margin-bottom:28px;
+            padding-bottom:24px;
+            border-bottom:0.5px solid #dde8f0;
+        }
+        .emotion-block:last-child { border-bottom:none; margin-bottom:0; }
+
+        .emotion-block-title {
+            display:flex;
+            align-items:center;
+            gap:8px;
+            font-size:15px;
+            font-weight:500;
+            color:#1e2d3d;
+            margin-bottom:16px;
+        }
+
+        .intensity-bars {
+            display:flex;
+            align-items:flex-end;
+            gap:5px;
+            height:100px;
+            position:relative;
+            margin-bottom:8px;
+        }
+
+        .intensity-label {
+            position:absolute;
+            left:0; bottom:-22px;
+            font-size:11px; color:#96b0c4;
+        }
+
+        .intensity-label-right {
+            position:absolute;
+            right:0; bottom:-22px;
+            font-size:11px; color:#96b0c4;
+        }
+
+        .intensity-value {
+            font-size:13px;
+            color:#7c5cbf;
+            font-weight:500;
+            margin-top:28px;
+            min-height:20px;
+        }
+
+        /* ── PAS 3 — SENZATIE ── */
+        .senzatie-block {
+            margin-bottom:24px;
+            padding-bottom:20px;
+            border-bottom:0.5px solid #dde8f0;
+        }
+        .senzatie-block:last-child { border-bottom:none; }
+
+        .senzatie-block label {
+            display:block;
+            font-size:14px; font-weight:500; color:#1e2d3d;
+            margin-bottom:8px;
+        }
+
+        .senzatie-block textarea {
+            width:100%;
+            border:1.5px solid #dde8f0;
+            border-radius:12px;
+            padding:12px 14px;
+            font-family:'DM Sans', sans-serif;
+            font-size:14px;
+            color:#1e2d3d;
+            resize:vertical;
+            min-height:80px;
+            outline:none;
+            transition:border-color 0.2s;
+        }
+        .senzatie-block textarea:focus { border-color:#a78bda; }
+        .senzatie-block textarea::placeholder { color:#c5d8e6; }
+
+        /* ── PAS 4 — SILUETA ── */
+        .silhouette-section {
+            display:flex;
+            gap:clamp(16px,3vw,40px);
+            align-items:flex-start;
+            flex-wrap:wrap;
+        }
+
+        .silhouette-wrap {
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            gap:8px;
+        }
+
+        .body-container {
+    position:relative;
+    width:260px;
+    height:565px;
+}
+
+        .body-container img {
+            width:100%;
+            height:100%;
+            object-fit:contain;
+            display:block;
+        }
+
+        .zone {
+            position:absolute;
+            background:transparent;
+            cursor:pointer;
+            transition:background 0.15s;
+            border-radius:6px;
+        }
+        .zone:hover { background:rgba(167,139,218,0.28); outline:2px solid #a78bda; }
+        .zone.selected { background:rgba(124,92,191,0.32); outline:2px solid #7c5cbf; }
+
+        #zone-list { display:flex; flex-direction:column; gap:8px; flex:1; min-width:160px; }
+
+        /* ── ACTIONS ── */
+        .actions {
+            display:flex;
+            gap:12px;
+            margin-top:24px;
+            justify-content:flex-end;
+            border-top:0.5px solid #dde8f0;
+            padding-top:20px;
+            flex-wrap:wrap;
+        }
+
+        .btn-secondary {
+            padding:11px 22px; border-radius:50px;
+            border:1.5px solid #dde8f0; background:transparent;
+            font-family:'DM Sans', sans-serif; font-size:14px; color:#96b0c4;
+            cursor:pointer; transition:all 0.2s;
+        }
+        .btn-secondary:hover { border-color:#96b0c4; color:#1e2d3d; }
+
+        .btn-primary {
+            padding:11px 28px; border-radius:50px; border:none;
+            background:#bfe8fb; font-family:'DM Sans', sans-serif;
+            font-size:14px; font-weight:600; color:#1e2d3d;
+            cursor:pointer; transition:all 0.2s;
+        }
+        .btn-primary:hover { background:#a5d8f0; transform:translateY(-1px); }
+        .btn-primary:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+
+        /* ── TAGS ── */
+        .tag {
+            display:flex; align-items:center; gap:8px;
+            padding:6px 10px; border-radius:8px;
+            border:0.5px solid #dde8f0; background:white;
+            animation:slideIn 0.2s ease;
+        }
+        @keyframes slideIn {
+            from { opacity:0; transform:translateX(-6px); }
+            to   { opacity:1; transform:translateX(0); }
+        }
+        .tag-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+        .tag-name { font-size:13px; flex:1; color:#1e2d3d; }
+        .tag-remove {
+            border:none; background:none; cursor:pointer;
+            font-size:16px; color:#96b0c4; line-height:1; padding:0 2px;
+            transition:color 0.2s;
+        }
+        .tag-remove:hover { color:#e84040; }
+
+        .empty-msg { font-size:13px; color:#96b0c4; }
+
+        /* submit btn */
+        .btn-submit {
+            padding:11px 28px; border-radius:50px; border:none;
+            background:#7c5cbf; font-family:'DM Sans', sans-serif;
+            font-size:14px; font-weight:600; color:white;
+            cursor:pointer; transition:all 0.2s;
+        }
+        .btn-submit:hover { background:#6a4aad; transform:translateY(-1px); }
+    </style>
+</head>
+<body>
+
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+
+<p class="page-title">Cum te-ai simțit? 💙</p>
+
+<!-- ═══ PAS 1 — ROATA ═══ -->
+<div class="step-card visible" id="step1">
+    <div class="step-header">
+        <div class="step-num">1</div>
+        <h2 class="step-title">Ce emoții ai simțit?</h2>
+    </div>
+    <p class="step-subtitle">Selectează toate emoțiile pe care le-ai trăit. Poți selecta mai multe.</p>
+
+    <div class="wheel-section">
+        <div class="wheel-wrap">
+            <div class="arrow-wrap">
+                <div class="arrow-indicator"></div>
+                <canvas id="wheel" width="480" height="480" style="width:480px;height:480px;display:block;cursor:pointer;"></canvas>            </div>
+            <p style="font-size:12px; color:#96b0c4;">Click pe o felie pentru a o selecta</p>
+        </div>
+        <div class="selected-emotions">
+            <h3>Emoții selectate</h3>
+            <div id="emotion-list"><p class="empty-msg">Nicio emoție selectată încă</p></div>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="btn-secondary" onclick="resetWheel()">Resetează</button>
+        <button class="btn-primary" id="btn-step1" disabled onclick="goToStep(2)">Continuă →</button>
+    </div>
+</div>
+
+<!-- ═══ PAS 2 — INTENSITATE ═══ -->
+<div class="step-card" id="step2">
+    <div class="step-header">
+        <div class="step-num">2</div>
+        <h2 class="step-title">Cât de puternice au fost?</h2>
+    </div>
+    <p class="step-subtitle">Selectează intensitatea pentru fiecare emoție.</p>
+    <div id="intensity-blocks"></div>
+    <div class="actions">
+        <button class="btn-primary" id="btn-step2" onclick="goToStep(3)">Continuă →</button>
+    </div>
+</div>
+
+<!-- ═══ PAS 3 — SENZATIE ═══ -->
+<div class="step-card" id="step3">
+    <div class="step-header">
+        <div class="step-num">3</div>
+        <h2 class="step-title">Ce ai simțit în corp?</h2>
+    </div>
+    <p class="step-subtitle">Descrie senzațiile fizice pentru fiecare emoție.</p>
+    <div id="senzatie-blocks"></div>
+    <div class="actions">
+        <button class="btn-primary" onclick="goToStep(4)">Continuă →</button>
+    </div>
+</div>
+
+<!-- ═══ PAS 4 — SILUETA ═══ -->
+<div class="step-card" id="step4">
+    <div class="step-header">
+        <div class="step-num">4</div>
+        <h2 class="step-title">Unde ai simțit-o în corp?</h2>
+    </div>
+    <p class="step-subtitle">Apasă pe zonele corpului unde ai localizat emoțiile.</p>
+
+    <div class="silhouette-section">
+        <div class="silhouette-wrap">
+            <div class="body-container">
+                <img th:src="@{/images/Silhouette.jpg}" alt="silueta"/>
+                <div class="zone" data-zone="Cap"          style="top:3%;  left:32%; width:36%; height:13%; border-radius:50%;"></div>
+                <div class="zone" data-zone="Gât"          style="top:16%; left:38%; width:24%; height:5%;"></div>
+                <div class="zone" data-zone="Piept"        style="top:21%; left:26%; width:48%; height:16%;"></div>
+                <div class="zone" data-zone="Stomac"       style="top:37%; left:26%; width:48%; height:12%;"></div>
+                <div class="zone" data-zone="Șolduri"      style="top:49%; left:24%; width:52%; height:10%;"></div>
+                <div class="zone" data-zone="Braț stâng"   style="top:21%; left:8%;  width:13%; height:28%; border-radius:20px;"></div>
+                <div class="zone" data-zone="Braț drept"   style="top:21%; left:79%; width:13%; height:28%; border-radius:20px;"></div>
+                <div class="zone" data-zone="Mână stângă"  style="top:49%; left:6%;  width:13%; height:9%;  border-radius:10px;"></div>
+                <div class="zone" data-zone="Mână dreaptă" style="top:49%; left:81%; width:13%; height:9%;  border-radius:10px;"></div><div class="zone" data-zone="Coapse"       style="top:59%; left:26%; width:48%; height:18%;"></div>
+                <div class="zone" data-zone="Gambe"        style="top:77%; left:27%; width:46%; height:15%;"></div>
+                <div class="zone" data-zone="Picioare"     style="top:92%; left:28%; width:44%; height:7%; border-radius:8px;"></div>
+            </div>
+            <p style="font-size:11px; color:#96b0c4; text-align:center; margin-top:4px;">Click pentru a selecta zone</p>
+        </div>
+
+        <div style="flex:1; min-width:160px;">
+            <p style="font-size:14px; font-weight:500; color:#1e2d3d; margin-bottom:10px;">Zone selectate</p>
+            <div id="zone-list"><p class="empty-msg">Nicio zonă selectată</p></div>
+        </div>
+    </div>
+
+    <form th:action="@{/emotie/adauga}" method="post" id="main-form">
+        <input type="hidden" id="h-emotii" name="emotiiSelectate"/>
+        <input type="hidden" id="h-intensitati" name="intensitati"/>
+        <input type="hidden" id="h-senzatii" name="senzatii"/>
+        <input type="hidden" id="h-locatii" name="locatii"/>
+        <div class="actions">
+            <button type="submit" class="btn-submit" onclick="prepareSubmit()">Salvează înregistrarea ✓</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    /* ══════════════ ROATA ══════════════ */
+    const GROUPS = [
+      {name:'Bucurie', colors:['#f6c90e','#f9d84a'], nuante:['Mândrie','Speranță']},
+      {name:'Iubire',  colors:['#e74c8b','#ed7aab'], nuante:['Recunoștință','Încredere']},
+      {name:'Furie',   colors:['#e84040','#ef7070'], nuante:['Rușine','Vinovăție']},
+      {name:'Frică',   colors:['#9b59b6','#b87dd1'], nuante:['Confuzie','Gol']},
+      {name:'Tristețe',colors:['#3d6fd4','#6b93e0'], nuante:['Singurătate','Dor']},
+      {name:'Dezgust', colors:['#27ae60','#5dcc8a'], nuante:['Epuizare','Dezamăgire']},
+      {name:'Anxietate',colors:['#e67e22','#f0a35b'],nuante:['Pace','Calm']},
+      {name:'Liniște', colors:['#2980b9','#5ba5d4'], nuante:['Mulțumire','Seninătate']},
+    ];
+
+    let wheelState = [];
+    GROUPS.forEach((g,gi) => {
+      wheelState.push({name:g.name, color:g.colors[0], ring:0, group:gi, active:true});
+      g.nuante.forEach((n,ni) => {
+        wheelState.push({name:n, color:g.colors[1], ring:1, group:gi, active:true});
+      });
+    });
+
+    let selectedEmotions = [];
+    let rotation = 0, animating = false;
+
+    const canvas = document.getElementById('wheel');
+    const ctx = canvas.getContext('2d');
+    const SIZE=480, cx=SIZE/2, cy=SIZE/2, R1=110, R2=225;
+
+    function getActiveByRing(ring){ return wheelState.filter(e=>e.active&&e.ring===ring); }
+
+    function drawArc(s,e,r1,r2,color){
+      ctx.beginPath();
+      ctx.arc(cx,cy,r2,s,e);
+      ctx.arc(cx,cy,r1,e,s,true);
+      ctx.closePath();
+      ctx.fillStyle=color; ctx.fill();
+      ctx.strokeStyle='white'; ctx.lineWidth=2; ctx.stroke();
+    }
+
+    function drawLabel(midA,r1,r2,text,size){
+      const rM=(r1+r2)/2;
+      const tx=cx+Math.cos(midA)*rM, ty=cy+Math.sin(midA)*rM;
+      ctx.save(); ctx.translate(tx,ty);
+      let rot=midA+Math.PI/2;
+      if(rot>Math.PI/2&&rot<Math.PI*3/2) rot+=Math.PI;
+      ctx.rotate(rot);
+      ctx.fillStyle='white';
+      ctx.font=`bold ${size}px DM Sans,sans-serif`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      const w=text.split(' ');
+      if(w.length===1) ctx.fillText(text,0,0);
+      else { ctx.fillText(w[0],0,-6); ctx.fillText(w.slice(1).join(' '),0,6); }
+      ctx.restore();
+    }
+
+    function drawWheel(){
+      ctx.clearRect(0,0,SIZE,SIZE);
+      const inner=getActiveByRing(0), outer=getActiveByRing(1);
+      if(inner.length>0){
+        const sl=(Math.PI*2)/inner.length;
+        inner.forEach((em,i)=>{ const s=rotation+i*sl-Math.PI/2,e=s+sl; drawArc(s,e,0,R1,em.color); if(sl>0.25)drawLabel((s+e)/2,24,R1,em.name,13); });
+      }
+      if(outer.length>0){
+        const sl=(Math.PI*2)/outer.length;
+        outer.forEach((em,i)=>{ const s=rotation+i*sl-Math.PI/2,e=s+sl; drawArc(s,e,R1+4,R2,em.color); if(sl>0.2)drawLabel((s+e)/2,R1+4,R2,em.name,12); });
+      }
+      ctx.beginPath(); ctx.arc(cx,cy,22,0,Math.PI*2); ctx.fillStyle='white'; ctx.fill();
+    }
+
+    function hitTest(clientX,clientY){
+      const rect=canvas.getBoundingClientRect(), scale=rect.width/SIZE;
+      const x=(clientX-rect.left)/scale, y=(clientY-rect.top)/scale;
+      const dx=x-cx, dy=y-cy, dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<22) return null;
+      let ring=dist<=R1?0:(dist>R1+4&&dist<=R2?1:-1);
+      if(ring<0) return null;
+      let angle=Math.atan2(dy,dx)-rotation+Math.PI/2;
+      angle=((angle%(Math.PI*2))+(Math.PI*2))%(Math.PI*2);
+      const active=getActiveByRing(ring);
+      if(!active.length) return null;
+      const i=Math.floor(angle/((Math.PI*2)/active.length));
+      return {item:active[i], stateIdx:wheelState.indexOf(active[i])};
+    }
+
+    function animateTo(target,cb){
+      animating=true;
+      const start=rotation;
+      let diff=target-start;
+      diff=((diff%(Math.PI*2))+(Math.PI*2))%(Math.PI*2);
+      if(diff<0.001) diff+=Math.PI*2;
+      const dur=600, t0=performance.now();
+      function step(now){
+        const t=Math.min((now-t0)/dur,1);
+        rotation=start+diff*(1-Math.pow(1-t,3));
+        drawWheel();
+        if(t<1) requestAnimationFrame(step);
+        else{rotation=start+diff;drawWheel();animating=false;cb&&cb();}
+      }
+      requestAnimationFrame(step);
+    }
+
+    canvas.addEventListener('click',e=>{
+      if(animating) return;
+      const hit=hitTest(e.clientX,e.clientY);
+      if(!hit) return;
+      const active=getActiveByRing(hit.item.ring);
+      const pos=active.indexOf(hit.item);
+      const sl=(Math.PI*2)/active.length;
+      animateTo(rotation-(rotation+pos*sl),()=>{
+        hit.item.active=false;
+        selectedEmotions.push({...hit.item, stateIdx:hit.stateIdx});
+        rotation=0; drawWheel(); updateEmotionList();
+      });
+    });
+
+    function updateEmotionList(){
+      const list=document.getElementById('emotion-list');
+      document.getElementById('btn-step1').disabled=selectedEmotions.length===0;
+      if(!selectedEmotions.length){ list.innerHTML='<p class="empty-msg">Nicio emoție selectată încă</p>'; return; }
+      list.innerHTML='';
+      selectedEmotions.forEach((em,i)=>{
+        const div=document.createElement('div'); div.className='tag';
+        const dot=document.createElement('div'); dot.className='tag-dot'; dot.style.background=em.color;
+        const n=document.createElement('span'); n.className='tag-name'; n.textContent=em.name;
+        const btn=document.createElement('button'); btn.className='tag-remove'; btn.textContent='×';
+        btn.onclick=()=>{ wheelState[em.stateIdx].active=true; selectedEmotions.splice(i,1); drawWheel(); updateEmotionList(); };
+        div.appendChild(dot); div.appendChild(n); div.appendChild(btn); list.appendChild(div);
+      });
+    }
+
+    function resetWheel(){
+      wheelState.forEach(e=>e.active=true); selectedEmotions=[]; rotation=0; drawWheel(); updateEmotionList();
+    }
+
+    drawWheel(); updateEmotionList();
+
+    /* ══════════════ NAVIGARE PASI ══════════════ */
+    function goToStep(n){
+      if(n===2) buildIntensityBlocks();
+      if(n===3) buildSenzatieBlocks();
+      const card=document.getElementById('step'+n);
+      card.style.display='block';
+      setTimeout(()=>{ card.classList.add('visible'); card.scrollIntoView({behavior:'smooth',block:'start'}); },50);
+    }
+
+    /* ══════════════ PAS 2 — INTENSITATE ══════════════ */
+    const intensities = {};
+
+    function buildIntensityBlocks(){
+      const container=document.getElementById('intensity-blocks');
+      container.innerHTML='';
+      selectedEmotions.forEach(em=>{
+        intensities[em.name]=intensities[em.name]||0;
+        const block=document.createElement('div'); block.className='emotion-block';
+        block.innerHTML=`
+          <div class="emotion-block-title">
+            <div style="width:12px;height:12px;border-radius:50%;background:${em.color};flex-shrink:0;"></div>
+            <span>${em.name}</span>
+          </div>
+          <div class="intensity-bars" id="bars-${em.name.replace(/[^a-z]/gi,'_')}">
+            <span class="intensity-label">1</span>
+            <span class="intensity-label-right">10</span>
+          </div>
+          <p class="intensity-value" id="val-${em.name.replace(/[^a-z]/gi,'_')}"></p>
+        `;
+        container.appendChild(block);
+        buildBars(em);
+      });
+    }
+
+    const intensityLabels=['','Foarte slabă','Slabă','Ușoară','Moderată','Moderată+','Semnificativă','Puternică','Foarte puternică','Intensă','Copleșitoare'];
+
+    function buildBars(em){
+      const key=em.name.replace(/[^a-z]/gi,'_');
+      const barsDiv=document.getElementById('bars-'+key);
+      const valDiv=document.getElementById('val-'+key);
+      for(let i=1;i<=10;i++){
+        const bar=document.createElement('div');
+        const h=15+i*8;
+        bar.style.cssText=`flex:1;height:${h}px;border-radius:5px 5px 0 0;background:#e8edf2;cursor:pointer;transition:background 0.12s;`;
+        bar.dataset.val=i;
+        bar.addEventListener('mouseenter',()=>{ updateBarsVisual(key,i,em.color,true); valDiv.textContent=intensityLabels[i]; });
+        bar.addEventListener('mouseleave',()=>{ updateBarsVisual(key,intensities[em.name],em.color,false); valDiv.textContent=intensities[em.name]?intensityLabels[intensities[em.name]]:''; });
+        bar.addEventListener('click',()=>{ intensities[em.name]=i; updateBarsVisual(key,i,em.color,false); valDiv.textContent=intensityLabels[i]; });
+        barsDiv.appendChild(bar);
+      }
+    }
+
+    function updateBarsVisual(key,val,color,isHover){
+      const barsDiv=document.getElementById('bars-'+key);
+      const bars=barsDiv.querySelectorAll('div[data-val]');
+      bars.forEach((b,idx)=>{
+        const v=idx+1;
+        if(val&&v<=val){ b.style.background=isHover?color+'aa':color; }
+        else{ b.style.background='#e8edf2'; }
+      });
+    }
+
+    /* ══════════════ PAS 3 — SENZATIE ══════════════ */
+    function buildSenzatieBlocks(){
+      const container=document.getElementById('senzatie-blocks');
+      container.innerHTML='';
+      selectedEmotions.forEach(em=>{
+        const block=document.createElement('div'); block.className='senzatie-block';
+        block.innerHTML=`
+          <label>
+            <span style="display:inline-flex;align-items:center;gap:6px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:${em.color};display:inline-block;"></span>
+              Ce ai simțit în corp pentru <strong>${em.name}</strong>?
+            </span>
+          </label>
+          <textarea id="senz-${em.name.replace(/[^a-z]/gi,'_')}" placeholder="Ex: apăsare, căldură, nod în gât..."></textarea>
+        `;
+        container.appendChild(block);
+      });
+    }
+
+    /* ══════════════ PAS 4 — SILUETA ══════════════ */
+    const selectedZones=new Set();
+    document.querySelectorAll('.zone').forEach(zone=>{
+      zone.addEventListener('click',()=>{
+        const name=zone.dataset.zone;
+        if(selectedZones.has(name)){ selectedZones.delete(name); zone.classList.remove('selected'); }
+        else{ selectedZones.add(name); zone.classList.add('selected'); }
+        updateZoneList();
+      });
+    });
+
+    function updateZoneList(){
+      const list=document.getElementById('zone-list');
+      if(!selectedZones.size){ list.innerHTML='<p class="empty-msg">Nicio zonă selectată</p>'; return; }
+      list.innerHTML='';
+      selectedZones.forEach(name=>{
+        const div=document.createElement('div'); div.className='tag';
+        const dot=document.createElement('div'); dot.className='tag-dot'; dot.style.background='#7c5cbf';
+        const n=document.createElement('span'); n.className='tag-name'; n.textContent=name;
+        const btn=document.createElement('button'); btn.className='tag-remove'; btn.textContent='×';
+        btn.onclick=()=>{ selectedZones.delete(name); document.querySelector(`[data-zone="${name}"]`).classList.remove('selected'); updateZoneList(); };
+        div.appendChild(dot); div.appendChild(n); div.appendChild(btn); list.appendChild(div);
+      });
+    }
+
+    /* ══════════════ SUBMIT ══════════════ */
+    function prepareSubmit(){
+      document.getElementById('h-emotii').value=selectedEmotions.map(e=>e.name).join(',');
+      const intArr=selectedEmotions.map(e=>`${e.name}:${intensities[e.name]||0}`);
+      document.getElementById('h-intensitati').value=intArr.join(';');
+      const senzArr=selectedEmotions.map(e=>{
+        const key=e.name.replace(/[^a-z]/gi,'_');
+        const el=document.getElementById('senz-'+key);
+        return `${e.name}:${el?el.value:''}`;
+      });
+      document.getElementById('h-senzatii').value=senzArr.join(';');
+      document.getElementById('h-locatii').value=[...selectedZones].join(',');
+    }
+</script>
+</body>
+</html>
