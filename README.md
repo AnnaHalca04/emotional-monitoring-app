@@ -59,6 +59,20 @@ The Naive Bayes model shows higher recall for neutral days (0.99), with lower pe
 
 ---
 
+## Screenshots
+
+### Dashboard
+![Dashboard](dashboard.png)
+
+### Emotion Wheel
+![Emotion Wheel](emotion_wheel.png)
+
+### Somatic Body Map
+![Somatic Location](somatic_location.png)
+
+### Mood Evolution Chart
+![Graphic Evolution](graphic_evolution.png)
+
 ## Setup
 
 ### Prerequisites
